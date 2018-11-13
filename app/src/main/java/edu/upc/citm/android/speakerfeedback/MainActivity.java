@@ -12,7 +12,12 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,9 +25,41 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     private static final int REGISTER_USER = 0;
-    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();;
     private TextView textview;
     private String userId;
+    private ListenerRegistration roomRegistration;
+    private ListenerRegistration usersRegistration;
+
+
+    private EventListener<DocumentSnapshot> roomListener = new EventListener<DocumentSnapshot>() {
+        @Override
+        public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+            if (e != null) {
+                Log.e("SpeakerFeedback", "Error loading rooms/testroom", e);
+                return;
+            }
+            String name = documentSnapshot.getString("name");
+            setTitle(name);
+        }
+    };
+
+    private EventListener<QuerySnapshot> usersListener = new EventListener<QuerySnapshot>() {
+        @Override
+        public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+            if (e != null) {
+                Log.e("SpeakerFeedBack", "Error reading users inside room", e);
+                return;
+            }
+            String userNames = "";
+            for (DocumentSnapshot doc : documentSnapshots)
+            {
+                userNames += doc.getString("name") +"\n";
+            }
+            textview.setText(String.format(userNames));
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +68,28 @@ public class MainActivity extends AppCompatActivity {
 
         textview = findViewById(R.id.textview);
 
+        GetOrRegisterUser();
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        roomRegistration = db.collection("rooms").document("testroom").addSnapshotListener(roomListener);
+
+        usersRegistration = db.collection("users").whereEqualTo("room", "testroom").addSnapshotListener(usersListener);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        roomRegistration.remove();
+        usersRegistration.remove();
+    }
+
+    private void GetOrRegisterUser() {
         // Busquem a les preferències de l'app l'ID de l'usuari per saber si ja s'havia registrat
         SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
         userId = prefs.getString("userId", null);

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">SpeakerFeedback</string>
+    <string name="activeLabel">Active</string>
+    <string name="questionLabel">Question</string>
 </resources>

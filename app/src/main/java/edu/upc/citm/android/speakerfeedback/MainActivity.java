@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REGISTER_USER = 0;
 
-    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    public static FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     private TextView textView;
     private String userId;
@@ -224,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.coseApp:
                 // Stop Firestore service when user closes the app
                 stopFirestoreListenerService();
-                
+
                 //Close the app
                 finish();
         }

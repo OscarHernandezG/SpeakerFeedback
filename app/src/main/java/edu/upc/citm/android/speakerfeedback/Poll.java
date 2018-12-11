@@ -74,4 +74,17 @@ public class Poll {
     public String getId() {
         return id;
     }
+
+    @Override
+    public String toString()
+    {
+        String string = question + "\n";
+
+        for(String iterator : options){
+            string += iterator;
+            string += "\n";
+        }
+
+        return string;
+    }
 }

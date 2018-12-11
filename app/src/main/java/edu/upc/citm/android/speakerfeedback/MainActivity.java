@@ -24,6 +24,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -32,6 +33,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -220,6 +222,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        // Remove user from room
+        db.collection("users").document(userId).update("room", FieldValue.delete());
+
+        // Stop Firestore service when user closes the app
+        stopFirestoreListenerService();
+
+        super.onDestroy();
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         switch (requestCode) {
@@ -278,6 +291,10 @@ public class MainActivity extends AppCompatActivity {
     {
         Map<String, Object> fields = new HashMap<>();
         fields.put("name", name);
+
+        // Save the time the user created his account (Should we update this date every time the user logs in?)
+        fields.put("last_active", new Date());
+
         db.collection("users").add(fields).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
             public void onSuccess(DocumentReference documentReference)

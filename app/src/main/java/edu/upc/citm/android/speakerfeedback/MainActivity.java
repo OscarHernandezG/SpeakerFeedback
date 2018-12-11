@@ -13,6 +13,9 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
@@ -37,6 +40,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.Inflater;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -187,16 +191,43 @@ public class MainActivity extends AppCompatActivity {
         textView = findViewById(R.id.usersCountView);
         pollsView = findViewById(R.id.pollsView);
 
-        GetOrRegisterUser();
-
         adapter = new Adapter();
 
         pollsView.setLayoutManager(new LinearLayoutManager(this));
         pollsView.setAdapter(adapter);
 
+
+        // Check if the user has already logged in (when you rotate f.e.)
+        //SharedPreferences sharedPreferences = getSharedPreferences("config", MODE_PRIVATE);
+        // serviceStarted = sharedPreferences.getBoolean("logged", false);
+
+        //if(!serviceStarted)
         startFirestoreListenerService();
 
+        GetOrRegisterUser();
+
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId())
+        {
+            case R.id.coseApp:
+                //Close the app (on destroy calls stopFirestoreListenerService())
+                finish();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     @Override
     protected void onStart()
@@ -220,7 +251,9 @@ public class MainActivity extends AppCompatActivity {
 
         roomRegistration.remove();
         usersRegistration.remove();
+
     }
+
 
     @Override
     protected void onDestroy() {
@@ -283,11 +316,12 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Register please", Toast.LENGTH_SHORT).show();
         } else {
             // If the user is registered we update the last_active
-
             db.collection("users").document(userId).update("last_active", new Date());
 
             Log.i("SpeakerFeedback", "userId = " + userId);
         }
+
+        prefs.edit().putBoolean("logged", true).commit();
     }
 
 

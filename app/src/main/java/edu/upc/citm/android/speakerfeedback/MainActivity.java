@@ -222,7 +222,10 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId())
         {
             case R.id.coseApp:
-                //Close the app (on destroy calls stopFirestoreListenerService())
+                // Stop Firestore service when user closes the app
+                stopFirestoreListenerService();
+                
+                //Close the app
                 finish();
         }
         return super.onOptionsItemSelected(item);
@@ -259,9 +262,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         // Remove user from room
         db.collection("users").document(userId).update("room", FieldValue.delete());
-
-        // Stop Firestore service when user closes the app
-        stopFirestoreListenerService();
 
         super.onDestroy();
     }

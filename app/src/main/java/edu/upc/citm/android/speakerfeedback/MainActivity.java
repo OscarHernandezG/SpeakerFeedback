@@ -195,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
         pollsView.setAdapter(adapter);
 
         startFirestoreListenerService();
+
     }
 
     @Override
@@ -279,9 +280,12 @@ public class MainActivity extends AppCompatActivity {
             // Hem de registrar l'usuari, demanem el nom
             Intent intent = new Intent(this, RegisterUserActivity.class);
             startActivityForResult(intent, REGISTER_USER);
-            Toast.makeText(this, "Encara t'has de registrar", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Register please", Toast.LENGTH_SHORT).show();
         } else {
-            // Ja està registrat, mostrem el id al Log
+            // If the user is registered we update the last_active
+
+            db.collection("users").document(userId).update("last_active", new Date());
+
             Log.i("SpeakerFeedback", "userId = " + userId);
         }
     }
@@ -308,9 +312,9 @@ public class MainActivity extends AppCompatActivity {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.e("SpeakerFeedback", "Error creant objecte", e);
+                Log.e("SpeakerFeedback", "Error loading objects", e);
                 Toast.makeText(MainActivity.this,
-                        "No s'ha pogut registrar l'usuari, intenta-ho més tard", Toast.LENGTH_SHORT).show();
+                        "User could not be loaded, try later", Toast.LENGTH_SHORT).show();
                 finish();
             }
         });

@@ -68,8 +68,19 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("SpeakerFeedback", "Error loading rooms/" + roomId, e);
                     return;
                 }
-                String name = documentSnapshot.getString("name");
-                setTitle(name);
+
+                Boolean isOpen = documentSnapshot.getBoolean("open");
+                assert isOpen != null;
+                if (isOpen) {
+                    String name = documentSnapshot.getString("name");
+                    setTitle(name);
+                }
+                else
+                {
+                    Log.i("SpeakerFeedback", "Room closed, exiting room");
+                }
+
+                Log.i("SpeakerFeedback", "Is room open? " + isOpen.toString());
             }
         };
 
@@ -201,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
         pollsView.setLayoutManager(new LinearLayoutManager(this));
         pollsView.setAdapter(adapter);
 
-        roomId = "OscarTestRoom";
+        roomId = "OscarTestRoon";
 
         // Check if the user has already logged in (when you rotate f.e.)
         //SharedPreferences sharedPreferences = getSharedPreferences("config", MODE_PRIVATE);

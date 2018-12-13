@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
             private CardView cardView;
 
 
-            public ViewHolder(View itemView) {
+            ViewHolder(View itemView) {
                 super(itemView);
                 questionView = itemView.findViewById(R.id.questionView);
                 optionsView = itemView.findViewById(R.id.optionsView);
@@ -149,12 +149,12 @@ public class MainActivity extends AppCompatActivity {
                 if (position == 0) {
                     holder.labelView.setVisibility(View.VISIBLE);
                     if (poll.isOpen())
-                        holder.labelView.setText("Active");
+                        holder.labelView.setText(R.string.active); //Active
                     else
-                        holder.labelView.setText("Previous");
+                        holder.labelView.setText(R.string.previous); // Previous
                 } else {
                     if (!poll.isOpen() && polls.get(position - 1).isOpen()) {
-                        holder.labelView.setText("Previous");
+                        holder.labelView.setText(R.string.previous); // Previous
                         holder.labelView.setVisibility(View.VISIBLE);
                     } else {
                         holder.labelView.setVisibility(View.GONE);
@@ -166,15 +166,15 @@ public class MainActivity extends AppCompatActivity {
                 holder.questionView.setText(poll.getQuestion());
 
 
-                String tempOptions = new String();
+                StringBuilder tempOptions = new StringBuilder();
                 List<String> options = poll.getOptions();
 
                 for (String iterator : options) {
-                    tempOptions += iterator;
-                    tempOptions += "\n";
+                    tempOptions.append(iterator);
+                    tempOptions.append("\n");
                 }
 
-                holder.optionsView.setText(tempOptions);
+                holder.optionsView.setText(tempOptions.toString());
             }
 
             @Override
@@ -363,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void saveVote(String pollid, int which)
     {
-        Map <String, Object> map = new HashMap<String, Object>();
+        Map <String, Object> map = new HashMap<>();
         map.put("option",which);
         map.put("pollid",pollid);
         db.collection("rooms").document(roomId).collection("votes").document(userId).set(map);
@@ -389,7 +389,7 @@ public class MainActivity extends AppCompatActivity {
             String[] options = new String[optlist.size()];
             for (int i = 0; i < optlist.size(); i++) {
                 options[i] = optlist.get(i);
-                Log.i("SpeakerFeedback", options[i].toString());
+                Log.i("SpeakerFeedback", options[i]);
             }
 
             Log.i("SpeakerFeedback", "Clicked poll");

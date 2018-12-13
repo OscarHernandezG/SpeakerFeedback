@@ -31,7 +31,7 @@ public class FirestoreServiceListener extends Service {
 
         Log.i("SpeakerFeedback", "FirestoreServiceListener.onCreate");
 
-        MainActivity.db.collection("rooms").document("testroom").collection("polls")
+        MainActivity.db.collection("rooms").document("OscarTestRoom").collection("polls")
                 .addSnapshotListener(pollListener);    }
 
     @Override
@@ -90,7 +90,7 @@ public class FirestoreServiceListener extends Service {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
         Notification notification = new NotificationCompat.Builder(this, App.CHANNEL_ID)
-                .setContentTitle(String.format("Connected to testRoom"))
+                .setContentTitle("Connected to OscarTestRoom")
                 .setSmallIcon(R.drawable.ic_message)
                 .setContentIntent(pendingIntent)
                 .build();
@@ -112,7 +112,6 @@ public class FirestoreServiceListener extends Service {
                 .build();
 
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
-        notificationManagerCompat.notify(i+2,notification);
-
+        notificationManagerCompat.notify(i + 2,notification);
     }
 }

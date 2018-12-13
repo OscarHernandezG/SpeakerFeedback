@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView textView;
     private String userId;
+    private String roomId;
     private ListenerRegistration roomRegistration;
     private ListenerRegistration usersRegistration;
     private List<Poll> polls = new ArrayList<>();
@@ -59,125 +60,129 @@ public class MainActivity extends AppCompatActivity {
     // Listeners
     //---------------------------------------------------------------------------------
     // Room listener
-    private EventListener<DocumentSnapshot> roomListener = new EventListener<DocumentSnapshot>() {
-        @Override
-        public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-            if (e != null) {
-                Log.e("SpeakerFeedback", "Error loading rooms/testroom", e);
-                return;
-            }
-            String name = documentSnapshot.getString("name");
-            setTitle(name);
-        }
-    };
 
-    // User listener
-    private EventListener<QuerySnapshot> usersListener = new EventListener<QuerySnapshot>() {
-        @Override
-        public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-            if (e != null) {
-                Log.e("SpeakerFeedBack", "Error reading users inside room", e);
-                return;
+        private EventListener<DocumentSnapshot> roomListener = new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.e("SpeakerFeedback", "Error loading rooms/" + roomId, e);
+                    return;
+                }
+                String name = documentSnapshot.getString("name");
+                setTitle(name);
             }
-            textView.setText(Integer.toString(documentSnapshots.size()));
-        }
-    };
+        };
 
-    // Poll listener
-    private EventListener<QuerySnapshot> pollListener = new EventListener<QuerySnapshot>() {
-        @Override
-        public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-            if (e != null) {
-                Log.e("SpeakerFreedback", "Error loading polls list");
-                return;
+        // User listener
+        private EventListener<QuerySnapshot> usersListener = new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.e("SpeakerFeedBack", "Error reading users inside room", e);
+                    return;
+                }
+                textView.setText(Integer.toString(documentSnapshots.size()));
             }
-            polls.clear();
-            for (DocumentSnapshot doc : documentSnapshots) {
-                Poll poll = doc.toObject(Poll.class);
-                poll.setId(doc.getId());
-                polls.add(poll);
+        };
+
+        // Poll listener
+        private EventListener<QuerySnapshot> pollListener = new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.e("SpeakerFreedback", "Error loading polls list");
+                    return;
+                }
+                polls.clear();
+                for (DocumentSnapshot doc : documentSnapshots) {
+                    Poll poll = doc.toObject(Poll.class);
+                    poll.setId(doc.getId());
+                    polls.add(poll);
+                }
+                Log.i("SpeakerFeedback", String.format("New polls loaded, %d polls.", polls.size()));
+                adapter.notifyDataSetChanged();
             }
-            Log.i("SpeakerFeedback", String.format("New polls loaded, %d polls.", polls.size()));
-            adapter.notifyDataSetChanged();
-        }
-    };
+        };
+
     //---------------------------------------------------------------------------------
 
 
     // Support classes
     //---------------------------------------------------------------------------------
-    class ViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView questionView;
-        private TextView optionsView;
-        private TextView labelView;
-        private CardView cardView;
+        class ViewHolder extends RecyclerView.ViewHolder {
+
+            private TextView questionView;
+            private TextView optionsView;
+            private TextView labelView;
+            private CardView cardView;
 
 
-        public ViewHolder(View itemView) {
-            super(itemView);
-            questionView = itemView.findViewById(R.id.questionView);
-            optionsView = itemView.findViewById(R.id.optionsView);
-            labelView=itemView.findViewById(R.id.labelView);
-            cardView = itemView.findViewById(R.id.cardView);
-            cardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int pos = getAdapterPosition();
-                    onClickCardView(pos);
-                }
-            });
-        }
-    }
-
-    class Adapter extends RecyclerView.Adapter<ViewHolder> {
-
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View itemView = getLayoutInflater().inflate(R.layout.poll, parent, false);
-            return new ViewHolder(itemView);
+            public ViewHolder(View itemView) {
+                super(itemView);
+                questionView = itemView.findViewById(R.id.questionView);
+                optionsView = itemView.findViewById(R.id.optionsView);
+                labelView = itemView.findViewById(R.id.labelView);
+                cardView = itemView.findViewById(R.id.cardView);
+                cardView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int pos = getAdapterPosition();
+                        onClickCardView(pos);
+                    }
+                });
+            }
         }
 
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            Poll poll = polls.get(position);
-            if (position == 0) {
-                holder.labelView.setVisibility(View.VISIBLE);
-                if (poll.isOpen())
-                    holder.labelView.setText("Active");
-                else
-                    holder.labelView.setText("Previous");
-            } else {
-                if (!poll.isOpen() && polls.get(position - 1).isOpen()) {
-                    holder.labelView.setText("Previous");
+        class Adapter extends RecyclerView.Adapter<ViewHolder> {
+
+            @NonNull
+            @Override
+            public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View itemView = getLayoutInflater().inflate(R.layout.poll, parent, false);
+                return new ViewHolder(itemView);
+            }
+
+            @Override
+            public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+                Poll poll = polls.get(position);
+                if (position == 0) {
                     holder.labelView.setVisibility(View.VISIBLE);
+                    if (poll.isOpen())
+                        holder.labelView.setText("Active");
+                    else
+                        holder.labelView.setText("Previous");
                 } else {
-                    holder.labelView.setVisibility(View.GONE);
+                    if (!poll.isOpen() && polls.get(position - 1).isOpen()) {
+                        holder.labelView.setText("Previous");
+                        holder.labelView.setVisibility(View.VISIBLE);
+                    } else {
+                        holder.labelView.setVisibility(View.GONE);
+                    }
                 }
+
+                holder.cardView.setCardElevation(poll.isOpen() ? 5.0f : 0.0f);
+
+                holder.questionView.setText(poll.getQuestion());
+
+
+                String tempOptions = new String();
+                List<String> options = poll.getOptions();
+
+                for (String iterator : options) {
+                    tempOptions += iterator;
+                    tempOptions += "\n";
+                }
+
+                holder.optionsView.setText(tempOptions);
             }
 
-            holder.cardView.setCardElevation(poll.isOpen() ? 5.0f : 0.0f);
-
-            holder.questionView.setText(poll.getQuestion());
-
-
-            String tempOptions = new String();
-            List<String> options = poll.getOptions();
-
-            for(String iterator : options){
-                tempOptions += iterator;
-                tempOptions += "\n";
+            @Override
+            public int getItemCount() {
+                return polls.size();
             }
-
-            holder.optionsView.setText(tempOptions);
         }
 
-        @Override
-        public int getItemCount() {
-            return polls.size();
-        }
-    }
     //---------------------------------------------------------------------------------
 
 
@@ -196,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
         pollsView.setLayoutManager(new LinearLayoutManager(this));
         pollsView.setAdapter(adapter);
 
+        roomId = "OscarTestRoom";
 
         // Check if the user has already logged in (when you rotate f.e.)
         //SharedPreferences sharedPreferences = getSharedPreferences("config", MODE_PRIVATE);
@@ -237,12 +243,12 @@ public class MainActivity extends AppCompatActivity {
     {
         super.onStart();
 
-        roomRegistration = db.collection("rooms").document("testroom")
+        roomRegistration = db.collection("rooms").document(roomId)
                 .addSnapshotListener(this, roomListener);
-        usersRegistration = db.collection("users").whereEqualTo("rooms", "testroom")
+        usersRegistration = db.collection("users").whereEqualTo("rooms", roomId)
                 .addSnapshotListener(this, usersListener);
 
-        db.collection("rooms").document("testroom").collection("polls")
+        db.collection("rooms").document(roomId).collection("polls")
                 .orderBy("start", Query.Direction.DESCENDING)
                 .addSnapshotListener(this, pollListener);
     }
@@ -291,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
     //---------------------------------------------------------------------------------
     private void startFirestoreListenerService() {
         Intent intent = new Intent(this, FirestoreServiceListener.class);
-        intent.putExtra("room", "testRoom");
+        intent.putExtra("room", roomId);
         startService(intent);
     }
 
@@ -306,11 +312,11 @@ public class MainActivity extends AppCompatActivity {
     //---------------------------------------------------------------------------------
     private void GetOrRegisterUser()
     {
-        // Busquem a les preferències de l'app l'ID de l'usuari per saber si ja s'havia registrat
+        // We search in the app preferences the user ID to know if the user has already registered.
         SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
         userId = prefs.getString("userId", null);
         if (userId == null) {
-            // Hem de registrar l'usuari, demanem el nom
+            // We register the user. Ask for his name
             Intent intent = new Intent(this, RegisterUserActivity.class);
             startActivityForResult(intent, REGISTER_USER);
             Toast.makeText(this, "Register please", Toast.LENGTH_SHORT).show();
@@ -321,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i("SpeakerFeedback", "userId = " + userId);
         }
 
-        prefs.edit().putBoolean("logged", true).commit();
+        prefs.edit().putBoolean("logged", true).apply();
     }
 
 
@@ -360,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
         Map <String, Object> map = new HashMap<String, Object>();
         map.put("option",which);
         map.put("pollid",pollid);
-        db.collection("rooms").document("testroom").collection("votes").document(userId).set(map);
+        db.collection("rooms").document(roomId).collection("votes").document(userId).set(map);
     }
     //---------------------------------------------------------------------------------
 

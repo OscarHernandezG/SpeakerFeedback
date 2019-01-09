@@ -175,6 +175,7 @@ public class SelectRoomActivity extends AppCompatActivity {
                         //Join the room
                         Intent intent = new Intent(SelectRoomActivity.this, MainActivity.class);
                         intent.putExtra("roomID", desiredRoom.getName());
+                        intent.putExtra("userId", userId);
                         startActivity(intent);
                     } else {
                         Toast.makeText(this, roomID + " is now closed", Toast.LENGTH_SHORT).show();
@@ -227,6 +228,7 @@ public class SelectRoomActivity extends AppCompatActivity {
                     //Join the room
                     Intent intent = new Intent(SelectRoomActivity.this, MainActivity.class);
                     intent.putExtra("roomID", desiredRoom.getName());
+                    intent.putExtra("userId", userId);
                     startActivity(intent);
                 }
                 else
@@ -244,6 +246,7 @@ public class SelectRoomActivity extends AppCompatActivity {
     public void openRoomsClick(View view)
     {
         Intent intent = new Intent(SelectRoomActivity.this, roomView.class);
+        intent.putExtra("userId", userId);
         startActivity(intent);
     }
 }

@@ -23,6 +23,7 @@ import java.util.List;
 public class roomView extends AppCompatActivity {
 
     Adapter adapter;
+    private String userId;
     private RecyclerView roomsView;
 
 
@@ -46,6 +47,9 @@ public class roomView extends AppCompatActivity {
         roomsView = findViewById(R.id.roomsView);
 
         adapter = new Adapter();
+
+        Intent intent = getIntent();
+        userId = intent.getStringExtra("userId");
 
         roomsView.setLayoutManager(new LinearLayoutManager(this));
         roomsView.setAdapter(adapter);
@@ -169,6 +173,7 @@ public class roomView extends AppCompatActivity {
         //Join the room
         Intent intent = new Intent(roomView.this, MainActivity.class);
         intent.putExtra("roomID", room);
+        intent.putExtra("userId", userId);
         startActivity(intent);
 
         finish();

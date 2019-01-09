@@ -200,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         roomId = intent.getStringExtra("roomID");
+        userId = intent.getStringExtra("userId");
 
         // Check if the user has already logged in (when you rotate f.e.)
         //SharedPreferences sharedPreferences = getSharedPreferences("config", MODE_PRIVATE);

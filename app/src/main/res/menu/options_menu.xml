@@ -3,6 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/coseApp"
+        android:id="@+id/closeRoom"
         android:title="@string/exit" />
+    <item
+        android:id="@+id/closeApp"
+        android:title="@string/close" />
+    <item
+        android:id="@+id/closeAndExit"
+        android:title="@string/closeApp" />
 </menu>

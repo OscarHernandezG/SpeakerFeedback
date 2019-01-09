@@ -25,7 +25,8 @@
 
         <activity android:name=".UserListActivity" />
         <activity android:name=".UserInRoomActivity" />
-        <activity android:name=".MainActivity"></activity>
+        <activity android:name=".MainActivity" />
+        <activity android:name=".roomView"></activity>
     </application>
 
 </manifest>

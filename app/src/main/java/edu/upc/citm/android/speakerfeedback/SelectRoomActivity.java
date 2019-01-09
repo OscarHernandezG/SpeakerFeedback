@@ -2,25 +2,19 @@ package edu.upc.citm.android.speakerfeedback;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.nio.channels.SelectableChannel;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -34,14 +28,12 @@ public class SelectRoomActivity extends AppCompatActivity {
 
     private boolean testLastRoom = true;
 
-    List<Room> roomList = new ArrayList<>();
-    List<String> recentRooms = new ArrayList<>();
+    static public List<Room> roomList = new ArrayList<>();
+    static public List<String> recentRooms = new ArrayList<>();
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     String userId;
-
-    RecyclerView recentRoomsGrid;
 
     //Rooms listener
     EventListener<QuerySnapshot> roomsListener = new EventListener<QuerySnapshot>() {
@@ -103,7 +95,36 @@ public class SelectRoomActivity extends AppCompatActivity {
 
         // prefs = getSharedPreferences("config", MODE_PRIVATE);
         // String roomOpened = prefs.getString("roomOpened", "");
+    }
 
+    @Override
+    protected void onStop() {
+
+        UpdateOpenRooms();
+
+        super.onStop();
+    }
+
+    private void UpdateOpenRooms() {
+        int openRoom = 0;
+
+        for (String roomID : recentRooms)
+        {
+            // Save the room id in the shared preferences
+            SharedPreferences roomInfo = getSharedPreferences("OpenRoom" + Integer.toString(openRoom), 0);
+            SharedPreferences.Editor roomInfoEditor = roomInfo.edit();
+
+            roomInfoEditor.putString("roomID", roomID);
+            roomInfoEditor.apply();
+
+            openRoom++;
+        }
+
+        SharedPreferences roomInfo = getSharedPreferences("Open Size", 0);
+        SharedPreferences.Editor roomInfoEditor = roomInfo.edit();
+
+        roomInfoEditor.putInt("Size", recentRooms.size());
+        roomInfoEditor.apply();
     }
 
     private void GetOrRegisterUser()
@@ -148,8 +169,9 @@ public class SelectRoomActivity extends AppCompatActivity {
                     if (desiredRoom.isOpen()) {
                         Toast.makeText(this, "Logging into " + roomID, Toast.LENGTH_SHORT).show();
 
-                        recentRooms.add(roomID);
-
+                        if (!recentRooms.contains(roomID)) {
+                            recentRooms.add(roomID);
+                        }
                         //Join the room
                         Intent intent = new Intent(SelectRoomActivity.this, MainActivity.class);
                         intent.putExtra("roomID", desiredRoom.getName());
@@ -198,7 +220,9 @@ public class SelectRoomActivity extends AppCompatActivity {
                     roomInfoEditor.apply();
 
                     // Add the desired room to the recent rooms
-                    recentRooms.add(roomID);
+                    if (!recentRooms.contains(roomID)) {
+                        recentRooms.add(roomID);
+                    }
 
                     //Join the room
                     Intent intent = new Intent(SelectRoomActivity.this, MainActivity.class);
@@ -215,5 +239,11 @@ public class SelectRoomActivity extends AppCompatActivity {
                 Toast.makeText(this, "Room does not exist, check the Room ID", Toast.LENGTH_SHORT).show();
 
         }
+    }
+
+    public void openRoomsClick(View view)
+    {
+        Intent intent = new Intent(SelectRoomActivity.this, roomView.class);
+        startActivity(intent);
     }
 }

@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.DataSetObserver;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -119,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
             super(itemView);
             questionView = itemView.findViewById(R.id.questionView);
             optionsView = itemView.findViewById(R.id.optionsView);
-            labelView=itemView.findViewById(R.id.labelView);
+            labelView = itemView.findViewById(R.id.labelView);
             cardView = itemView.findViewById(R.id.cardView);
             cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -166,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
             String tempOptions = new String();
             List<String> options = poll.getOptions();
 
-            for(String iterator : options){
+            for (String iterator : options) {
                 tempOptions += iterator;
                 tempOptions += "\n";
             }
@@ -206,9 +207,6 @@ public class MainActivity extends AppCompatActivity {
 
         //if(!serviceStarted)
         startFirestoreListenerService();
-
-        GetOrRegisterUser();
-
     }
 
     @Override
@@ -222,23 +220,47 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        switch (item.getItemId())
-        {
-            case R.id.coseApp:
-                // Stop Firestore service when user closes the app
-                stopFirestoreListenerService();
-
-                SharedPreferences roomInfo = getSharedPreferences("PreviousRoom", 0);
-                SharedPreferences.Editor roomInfoEditor = roomInfo.edit();
-
-                roomInfoEditor.putString("roomID", "");
-
-                roomInfoEditor.apply();
+        switch (item.getItemId()) {
+            case R.id.closeRoom: {
+                ExitRoom();
 
                 //Close the activity
                 finish();
+            }
+            break;
+            case R.id.closeAndExit: {
+                ExitRoom();
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    finishAffinity();
+                } else
+                    finish();
+            }
+            break;
+
+            case R.id.closeApp:
+                    finish();
+
+            break;
         }
-        return super.onOptionsItemSelected(item);
+        return super.
+
+    onOptionsItemSelected(item);
+
+}
+
+    private void ExitRoom() {
+        // Stop Firestore service when user closes the app
+        stopFirestoreListenerService();
+
+        SharedPreferences roomInfo = getSharedPreferences("PreviousRoom", 0);
+        SharedPreferences.Editor roomInfoEditor = roomInfo.edit();
+
+        roomInfoEditor.putString("roomID", "");
+
+        roomInfoEditor.apply();
+
+        SelectRoomActivity.recentRooms.remove(roomId);
     }
 
 
@@ -265,8 +287,30 @@ public class MainActivity extends AppCompatActivity {
         roomRegistration.remove();
         usersRegistration.remove();
 
+        UpdateOpenRooms();
     }
 
+    private void UpdateOpenRooms() {
+        int openRoom = 0;
+
+        for (String roomID : SelectRoomActivity.recentRooms)
+        {
+            // Save the room id in the shared preferences
+            SharedPreferences roomInfo = getSharedPreferences("OpenRoom" + Integer.toString(openRoom), 0);
+            SharedPreferences.Editor roomInfoEditor = roomInfo.edit();
+
+            roomInfoEditor.putString("roomID", roomID);
+            roomInfoEditor.apply();
+
+            openRoom++;
+        }
+
+        SharedPreferences roomInfo = getSharedPreferences("Open Size", 0);
+        SharedPreferences.Editor roomInfoEditor = roomInfo.edit();
+
+        roomInfoEditor.putInt("Size", SelectRoomActivity.recentRooms.size());
+        roomInfoEditor.apply();
+    }
 
     @Override
     protected void onDestroy() {

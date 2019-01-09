@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".SelectRoomActivity"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +25,7 @@
 
         <activity android:name=".UserListActivity" />
         <activity android:name=".UserInRoomActivity" />
-        <activity android:name=".SelectRoomActivity"></activity>
+        <activity android:name=".MainActivity"></activity>
     </application>
 
 </manifest>

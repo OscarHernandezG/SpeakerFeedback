@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView textView;
     private String userId;
+    private String roomId;
     private ListenerRegistration roomRegistration;
     private ListenerRegistration usersRegistration;
     private List<Poll> polls = new ArrayList<>();
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
             if (e != null) {
-                Log.e("SpeakerFeedback", "Error loading rooms/testroom", e);
+                Log.e("SpeakerFeedback", "Error loading rooms/" + roomId, e);
                 return;
             }
             String name = documentSnapshot.getString("name");
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
             if (e != null) {
-                Log.e("SpeakerFeedBack", "Error reading users inside room", e);
+                Log.e("SpeakerFeedBack", "Error reading users inside " + roomId, e);
                 return;
             }
             textView.setText(Integer.toString(documentSnapshots.size()));
@@ -196,6 +197,8 @@ public class MainActivity extends AppCompatActivity {
         pollsView.setLayoutManager(new LinearLayoutManager(this));
         pollsView.setAdapter(adapter);
 
+        Intent intent = getIntent();
+        roomId = intent.getStringExtra("roomID");
 
         // Check if the user has already logged in (when you rotate f.e.)
         //SharedPreferences sharedPreferences = getSharedPreferences("config", MODE_PRIVATE);
@@ -225,7 +228,14 @@ public class MainActivity extends AppCompatActivity {
                 // Stop Firestore service when user closes the app
                 stopFirestoreListenerService();
 
-                //Close the app
+                SharedPreferences roomInfo = getSharedPreferences("PreviousRoom", 0);
+                SharedPreferences.Editor roomInfoEditor = roomInfo.edit();
+
+                roomInfoEditor.putString("roomID", "");
+
+                roomInfoEditor.apply();
+
+                //Close the activity
                 finish();
         }
         return super.onOptionsItemSelected(item);
@@ -237,12 +247,12 @@ public class MainActivity extends AppCompatActivity {
     {
         super.onStart();
 
-        roomRegistration = db.collection("rooms").document("testroom")
+        roomRegistration = db.collection("rooms").document(roomId)
                 .addSnapshotListener(this, roomListener);
-        usersRegistration = db.collection("users").whereEqualTo("rooms", "testroom")
+        usersRegistration = db.collection("users").whereEqualTo("rooms", roomId)
                 .addSnapshotListener(this, usersListener);
 
-        db.collection("rooms").document("testroom").collection("polls")
+        db.collection("rooms").document(roomId).collection("polls")
                 .orderBy("start", Query.Direction.DESCENDING)
                 .addSnapshotListener(this, pollListener);
     }
@@ -291,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
     //---------------------------------------------------------------------------------
     private void startFirestoreListenerService() {
         Intent intent = new Intent(this, FirestoreServiceListener.class);
-        intent.putExtra("room", "testRoom");
+        intent.putExtra("room", roomId);
         startService(intent);
     }
 
@@ -360,7 +370,7 @@ public class MainActivity extends AppCompatActivity {
         Map <String, Object> map = new HashMap<String, Object>();
         map.put("option",which);
         map.put("pollid",pollid);
-        db.collection("rooms").document("testroom").collection("votes").document(userId).set(map);
+        db.collection("rooms").document(roomId).collection("votes").document(userId).set(map);
     }
     //---------------------------------------------------------------------------------
 

@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -28,6 +29,11 @@ public class SelectRoomActivity extends AppCompatActivity {
 
     private static final int REGISTER_USER = 0;
 
+    TextView roomIdText;
+    TextView roomPasswordText;
+
+    private boolean testLastRoom = true;
+
     List<Room> roomList = new ArrayList<>();
     List<String> recentRooms = new ArrayList<>();
 
@@ -36,7 +42,6 @@ public class SelectRoomActivity extends AppCompatActivity {
     String userId;
 
     RecyclerView recentRoomsGrid;
-    Adapter adapter;
 
     //Rooms listener
     EventListener<QuerySnapshot> roomsListener = new EventListener<QuerySnapshot>() {
@@ -76,82 +81,28 @@ public class SelectRoomActivity extends AppCompatActivity {
                     i--;
                 }
             }
-            adapter.notifyDataSetChanged();
+
+            EnterRoom();
         }
     };
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView textView;
 
-        public ViewHolder(View itemView) {
-            super(itemView);
-
-            // useLogo -> recent room
-            textView = itemView.findViewById(R.id.useLogo);
-        }
-    }
-
-    public class Adapter extends RecyclerView.Adapter<ViewHolder>
-    {
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
-        {
-            // users_info -> recent room
-            View itemView = getLayoutInflater().inflate(R.layout.users_info, parent, false);
-            return new ViewHolder(itemView);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
-
-            String recentName = recentRooms.get(position);
-            holder.textView.setText(recentName);
-
-            holder.textView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                      RecentRoomClicked(position);
-                }
-            });
-        }
-
-        @Override
-        public int getItemCount()
-        {
-            return recentRooms.size();
-        }
-    }
-
-    void RecentRoomClicked(int position)
-    {
-        String room = recentRooms.get(position);
-
-        //Join the clicked room
-        Intent intent = new Intent(SelectRoomActivity.this, MainActivity.class);
-        intent.putExtra("roomName", room);
-        startActivity(intent);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_room);
 
+        roomIdText = findViewById(R.id.roomIdText);
+        roomPasswordText = findViewById(R.id.roomPassword);
 
         db.collection("rooms").addSnapshotListener(roomsListener);
 
         GetOrRegisterUser();
 
-        //Load recent room
-        SharedPreferences prefs = getSharedPreferences(userId, MODE_PRIVATE);
-        String lastRoomID = prefs.getString("roomID", "");
-        String lastRoomPassword = prefs.getString("roomPassword", "");
-
-
-        prefs = getSharedPreferences("config", MODE_PRIVATE);
-        String roomOpened = prefs.getString("roomOpened", "");
+        // prefs = getSharedPreferences("config", MODE_PRIVATE);
+        // String roomOpened = prefs.getString("roomOpened", "");
 
     }
 
@@ -175,12 +126,94 @@ public class SelectRoomActivity extends AppCompatActivity {
         prefs.edit().putBoolean("logged", true).apply();
     }
 
-    private void EnterRoom(String roomID, String roomPassword)
-    {
-        if (!roomID.equals("") || !roomPassword.equals(""))
-        {
+    private void EnterRoom() {
+        if (testLastRoom) {
+            // //Load recent room
+            SharedPreferences roomInfo = getSharedPreferences("PreviousRoom", 0);
+            String roomID = roomInfo.getString("roomID", "");
 
+            boolean exists = false;
+            Room desiredRoom = null;
+
+            if (!roomID.equals("")) {
+                for (Room room : roomList) {
+                    if (room.getName().equals(roomID)) {
+                        exists = true;
+                        desiredRoom = room;
+                        break;
+                    }
+                }
+
+                if (exists && desiredRoom != null) {
+                    if (desiredRoom.isOpen()) {
+                        Toast.makeText(this, "Logging into " + roomID, Toast.LENGTH_SHORT).show();
+
+                        recentRooms.add(roomID);
+
+                        //Join the room
+                        Intent intent = new Intent(SelectRoomActivity.this, MainActivity.class);
+                        intent.putExtra("roomID", desiredRoom.getName());
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(this, roomID + " is now closed", Toast.LENGTH_SHORT).show();
+                    }
+                } else
+                    Toast.makeText(this, roomID + " does no longer exist", Toast.LENGTH_SHORT).show();
+            }
+            testLastRoom = false;
         }
     }
 
+    public void enterRoomClick(View view)
+    {
+        String roomID = roomIdText.getText().toString();
+        String roomPassword = roomPasswordText.getText().toString();
+
+        if (!roomID.equals("") || !roomPassword.equals(""))
+        {
+            boolean exists = false;
+            Room desiredRoom = null;
+
+            for(Room room : roomList)
+            {
+                if(room.getName().equals(roomID))
+                {
+                    exists = true;
+                    desiredRoom = room;
+                    break;
+                }
+            }
+
+            if (exists && desiredRoom != null && desiredRoom.isOpen())
+            {
+                if (desiredRoom.getPassword().equals(roomPassword))
+                {
+                    Toast.makeText(this, "Password Correct, Logging into " + roomID, Toast.LENGTH_SHORT).show();
+
+                    // Save the room id in the shared preferences
+                    SharedPreferences roomInfo = getSharedPreferences("PreviousRoom", 0);
+                    SharedPreferences.Editor roomInfoEditor = roomInfo.edit();
+
+                    roomInfoEditor.putString("roomID", roomID);
+                    roomInfoEditor.apply();
+
+                    // Add the desired room to the recent rooms
+                    recentRooms.add(roomID);
+
+                    //Join the room
+                    Intent intent = new Intent(SelectRoomActivity.this, MainActivity.class);
+                    intent.putExtra("roomID", desiredRoom.getName());
+                    startActivity(intent);
+                }
+                else
+                {
+                    Toast.makeText(this, "Password Incorrect, Try again", Toast.LENGTH_SHORT).show();
+                    roomPasswordText.setText("");
+                }
+            }
+            else
+                Toast.makeText(this, "Room does not exist, check the Room ID", Toast.LENGTH_SHORT).show();
+
+        }
+    }
 }

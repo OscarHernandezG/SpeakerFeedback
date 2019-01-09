@@ -24,7 +24,8 @@
         <service android:name=".FirestoreServiceListener" />
 
         <activity android:name=".UserListActivity" />
-        <activity android:name=".UserInRoomActivity"></activity>
+        <activity android:name=".UserInRoomActivity" />
+        <activity android:name=".SelectRoomActivity"></activity>
     </application>
 
 </manifest>

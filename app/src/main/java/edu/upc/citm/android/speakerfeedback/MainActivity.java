@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView pollsView;
     private Adapter adapter;
 
+
     // Listeners
     //---------------------------------------------------------------------------------
     // Room listener
@@ -212,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         pollsView.setLayoutManager(new LinearLayoutManager(this));
         pollsView.setAdapter(adapter);
 
-        roomId = "OscarTestRoon";
+        roomId = "";
 
         // Check if the user has already logged in (when you rotate f.e.)
         //SharedPreferences sharedPreferences = getSharedPreferences("config", MODE_PRIVATE);
@@ -242,6 +243,11 @@ public class MainActivity extends AppCompatActivity {
                 // Stop Firestore service when user closes the app
                 stopFirestoreListenerService();
 
+
+                SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
+                prefs.edit().putString("roomOpened", roomId).apply();
+
+
                 //Close the app
                 finish();
         }
@@ -253,6 +259,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart()
     {
         super.onStart();
+
+        // Get the room the user wants, if for some reason we don't have a room we send the user to "testroom"
+        Intent intent = getIntent();
+        String roomName = intent.getStringExtra("roomName");
+        if(roomName == null) {
+            roomName = "testroom";
+            Toast.makeText(this, "No room provided, entering testroom", Toast.LENGTH_SHORT).show();
+        }
+        roomId = roomName;
 
         roomRegistration = db.collection("rooms").document(roomId)
                 .addSnapshotListener(this, roomListener);

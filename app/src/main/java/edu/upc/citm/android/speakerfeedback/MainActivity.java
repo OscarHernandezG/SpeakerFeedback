@@ -70,18 +70,16 @@ public class MainActivity extends AppCompatActivity
                     Log.e("SpeakerFeedback", "Error loading rooms/" + roomId, e);
                     return;
                 }
-
                 Boolean isOpen = documentSnapshot.getBoolean("open");
-                assert isOpen != null;
-                if (isOpen) {
-                    String name = documentSnapshot.getString("name");
-                    setTitle(name);
+                //assert isOpen != null;
+                if (isOpen != null) {
+                    if (isOpen) {
+                        String name = documentSnapshot.getString("name");
+                        setTitle(name);
+                    } else {
+                        Log.i("SpeakerFeedback", "Room closed, exiting room");
+                    }
                 }
-                else
-                {
-                    Log.i("SpeakerFeedback", "Room closed, exiting room");
-                }
-
                 Log.i("SpeakerFeedback", "Is room open? " + isOpen.toString());
             }
         };
@@ -214,17 +212,37 @@ public class MainActivity extends AppCompatActivity
         pollsView.setLayoutManager(new LinearLayoutManager(this));
         pollsView.setAdapter(adapter);
 
-        roomId = "";
+        roomId = "testroom";
 
+        GetOrRegisterUser();
         // Check if the user has already logged in (when you rotate f.e.)
-        //SharedPreferences sharedPreferences = getSharedPreferences("config", MODE_PRIVATE);
-        // serviceStarted = sharedPreferences.getBoolean("logged", false);
+        SharedPreferences sharedPreferences = getSharedPreferences("config", MODE_PRIVATE);
+        boolean serviceStarted = sharedPreferences.getBoolean("logged", false);
 
-        //if(!serviceStarted)
+        if(!serviceStarted)
         startFirestoreListenerService();
 
     }
 
+    private void GetOrRegisterUser()
+    {
+        // We search in the app preferences the user ID to know if the user has already registered.
+        SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
+        userId = prefs.getString("userId", null);
+        if (userId == null) {
+            // We register the user. Ask for his name
+            Intent intent = new Intent(this, RegisterUserActivity.class);
+            startActivityForResult(intent, REGISTER_USER);
+            Toast.makeText(this, "Register please", Toast.LENGTH_SHORT).show();
+        } else {
+            // If the user is registered we update the last_active
+            db.collection("users").document(userId).update("last_active", new Date());
+
+            Log.i("SpeakerFeedback", "userId = " + userId);
+        }
+
+        prefs.edit().putBoolean("logged", true).apply();
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -263,7 +281,7 @@ public class MainActivity extends AppCompatActivity
         Intent intent = getIntent();
         String roomName = intent.getStringExtra("roomName");
         if(roomName == null) {
-            roomName = "testroom";
+            roomName = "testRoom";
             Toast.makeText(this, "No room provided, entering testroom", Toast.LENGTH_SHORT).show();
         }
         roomId = roomName;

@@ -5,4 +5,7 @@
     <string name="exit">Exit</string>
     <string name="active">Active</string>
     <string name="previous">Previous</string>
+    <string name="enterRoom">Enter Room</string>
+    <string name="roomID">Room ID</string>
+    <string name="password">Password</string>
 </resources>

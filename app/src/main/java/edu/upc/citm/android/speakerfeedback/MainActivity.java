@@ -34,6 +34,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import edu.upc.citm.android.speakerfeedback.Poll;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,8 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.Inflater;
 
-public class MainActivity extends AppCompatActivity {
-
+public class MainActivity extends AppCompatActivity
+{
     private static final int REGISTER_USER = 0;
 
     public static FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -222,8 +223,6 @@ public class MainActivity extends AppCompatActivity {
         //if(!serviceStarted)
         startFirestoreListenerService();
 
-        GetOrRegisterUser();
-
     }
 
     @Override
@@ -336,26 +335,6 @@ public class MainActivity extends AppCompatActivity {
 
     // General methods
     //---------------------------------------------------------------------------------
-    private void GetOrRegisterUser()
-    {
-        // We search in the app preferences the user ID to know if the user has already registered.
-        SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
-        userId = prefs.getString("userId", null);
-        if (userId == null) {
-            // We register the user. Ask for his name
-            Intent intent = new Intent(this, RegisterUserActivity.class);
-            startActivityForResult(intent, REGISTER_USER);
-            Toast.makeText(this, "Register please", Toast.LENGTH_SHORT).show();
-        } else {
-            // If the user is registered we update the last_active
-            db.collection("users").document(userId).update("last_active", new Date());
-
-            Log.i("SpeakerFeedback", "userId = " + userId);
-        }
-
-        prefs.edit().putBoolean("logged", true).apply();
-    }
-
 
     private void registerUser(String name)
     {
